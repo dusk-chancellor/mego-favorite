@@ -1,0 +1,12 @@
+version: '3'
+dotenv: ['.env']
+
+tasks:
+  m:up:
+    cmds:
+      - goose -dir migrations postgres "$DB_URL" up
+    silent: true
+  m:reset:
+    cmds:
+      - goose -dir migrations postgres "$DB_URL" reset
+    silent: true

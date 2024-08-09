@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:14.8-alpine3.18
+    container_name: mego_user_db
+    environment:
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_USER: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - ./tmp/postgres:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    networks:
+      - mego_network
+  mego_favorite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mego_favorite
+    depends_on:
+      - postgres
+    ports:
+      - "${FAVORITE_SERVICE_SERVER_PORT}:${FAVORITE_SERVICE_SERVER_PORT}"
+    networks:
+      - mego_network
+
+networks:
+  mego_network:
+    external: true
