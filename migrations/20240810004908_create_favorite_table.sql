@@ -2,8 +2,9 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS favorites
 (
-    post_id VARCHAR(255) NOT NULL,
-    count INTEGER
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    post_id VARCHAR(255) NOT NULL
 );
 -- +goose StatementEnd
 

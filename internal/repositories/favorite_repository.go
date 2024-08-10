@@ -12,9 +12,10 @@ const (
 )
 
 type FavoriteRepository interface {
-	Create(favorite *models.Favorite) (string, error)
-	Increment(postID string) (string, error)
-	Decrement(postID string) (string, error)
+	Exists(favorite models.Favorite) bool
+	Add(favorite models.Favorite) (string, string, error)
+	Delete(favorite models.Favorite) (string, string, error)
+	Count(postID string) int32
 }
 
 type favoriteRepository struct {
@@ -27,37 +28,50 @@ func NewFavoriteRepository(db *sqlx.DB) FavoriteRepository {
 	}
 }
 
-func (r *favoriteRepository) Create(favorite *models.Favorite) (string, error) {
-	q := `INSERT INTO favorites (post_id, count) VALUES ($1, $2)`
+func (r *favoriteRepository) Add(favorite models.Favorite) (string, string, error) {
+	q := `INSERT INTO favorites (user_id, post_id) VALUES ($1, $2) RETURNING user_id, post_id;`
 
-	_, err := r.db.Exec(q, favorite.PostID, favorite.Count)
+	var userId, postId string
+	err := r.db.QueryRow(q, favorite.UserId, favorite.PostID).Scan(&userId, &postId)
 	if err != nil {
-		log.Printf("Element: %s | Failed to create favorite: %v", element, err)
-		return "", err
+		log.Printf("Element: %s | Failed to add favorite: %v", element, err)
+		return "", "", err
 	}
-	return favorite.PostID, nil
+	return userId, postId, nil
 }
 
-func (r *favoriteRepository) Increment(postID string) (string, error) {
-	q := `UPDATE favorites SET count = count + 1 WHERE post_id = $1`
+func (r *favoriteRepository) Exists(favorite models.Favorite) bool {
+	q := `SELECT EXISTS(SELECT 1 FROM favorites WHERE user_id = $1 AND post_id = $2);`
 
-	_, err := r.db.Exec(q, postID)
+	var exists bool
+	err := r.db.QueryRow(q, favorite.UserId, favorite.PostID).Scan(&exists)
 	if err != nil {
-		log.Printf("Element: %s | Failed to increment favorite: %v", element, err)
-		return "", err
+		log.Printf("Element: %s | Failed to check if favorite exists: %v", element, err)
+		return false
 	}
-	return postID, nil
+	return exists
 }
 
-func (r *favoriteRepository) Decrement(postID string) (string, error) {
-	q := `UPDATE favorites SET count = count - 1 WHERE post_id = $1`
+func (r *favoriteRepository) Delete(favorite models.Favorite) (string, string, error) {
+	q := `DELETE FROM favorites WHERE user_id = $1 AND post_id = $2 RETURNING user_id, post_id;`
 
-	_, err := r.db.Exec(q, postID)
+	var userId, postId string
+	err := r.db.QueryRow(q, favorite.UserId, favorite.PostID).Scan(&userId, &postId)
 	if err != nil {
-		log.Printf("Element: %s | Failed to decrement favorite: %v", element, err)
-		return "", err
+		log.Printf("Element: %s | Failed to delete favorite: %v", element, err)
+		return "", "", err
 	}
-	return postID, nil
+	return userId, postId, nil
 }
 
+func (r *favoriteRepository) Count(postID string) int32 {
+	q := `SELECT COUNT(*) FROM favorites WHERE post_id = $1;`
 
+	var count int32
+	err := r.db.QueryRow(q, postID).Scan(&count)
+	if err != nil {
+		log.Printf("Element: %s | Failed to count favorites: %v", element, err)
+		return 0
+	}
+	return count
+}

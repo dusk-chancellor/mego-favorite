@@ -12,9 +12,9 @@ const (
 )
 
 type FavoriteService interface {
-	Exists(postID string) bool
-	Add(postID string) (string, error)
-	Delete(postID string) (string, error)
+	Exists(favorite models.Favorite) bool
+	Add(favorite models.Favorite) (string, string, error)
+	Delete(favorite models.Favorite) (string, string, error)
 	Count(postID string) int32
 }
 
@@ -30,38 +30,28 @@ func NewFavoriteService(favoriteRepo repositories.FavoriteRepository, favoriteLo
 	}
 }
 
-func (s *favoriteService) Exists(postID string) bool {
-	return s.favoriteLocalCache.Exists(postID)
+func (s *favoriteService) Exists(favorite models.Favorite) bool {
+	return s.favoriteLocalCache.Exists(favorite)
 }
 
-func (s *favoriteService) Add(postID string) (string, error) {
-	if exists := s.favoriteLocalCache.Exists(postID); exists {
-		id, err := s.favoriteRepository.Increment(postID)
-		if err != nil {
-			log.Printf("Element: %s | Failed to add favorite: %v", element, err)
-			return "", err
-		}
-		go s.favoriteLocalCache.Increment(postID)
-		return id, nil
-	}
-	favorite := &models.Favorite{PostID: postID, Count: 1}
-	id, err := s.favoriteRepository.Create(favorite)
+func (s *favoriteService) Add(favorite models.Favorite) (string, string, error) {
+	userId, postId, err := s.favoriteRepository.Add(favorite)
 	if err != nil {
 		log.Printf("Element: %s | Failed to add favorite: %v", element, err)
-		return "", err
+		return "", "", err
 	}
-	go s.favoriteLocalCache.Add(postID)
-	return id, nil
+	go s.favoriteLocalCache.Add(favorite)
+	return userId, postId, nil
 }
 
-func (s *favoriteService) Delete(postID string) (string, error) {
-	id, err := s.favoriteRepository.Decrement(postID)
+func (s *favoriteService) Delete(favorite models.Favorite) (string, string, error) {
+	userId, postId, err := s.favoriteRepository.Delete(favorite)
 	if err != nil {
 		log.Printf("Element: %s | Failed to delete favorite: %v", element, err)
-		return "", err
+		return "", "", err
 	}
-	go s.favoriteLocalCache.Decrement(postID)
-	return id, nil
+	go s.favoriteLocalCache.Delete(favorite)
+	return userId, postId, nil
 }
 
 func (s *favoriteService) Count(postID string) int32 {

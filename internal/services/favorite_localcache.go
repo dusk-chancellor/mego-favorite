@@ -1,39 +1,40 @@
 package services
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/dusk-chancellor/mego-favorite/internal/models"
+)
 
 type favoriteLocalCache struct {
-	posts map[string]int32
+	favorites map[string]string
 	sync.Mutex
 }
 
 func NewFavoriteLocalCache() *favoriteLocalCache {
-	return &favoriteLocalCache{}
+	return &favoriteLocalCache{
+		favorites: make(map[string]string),
+	}
 }
 
-func (lc *favoriteLocalCache) Add(postID string) {
+func (lc *favoriteLocalCache) Add(favorite models.Favorite) {
 	lc.Lock()
 	defer lc.Unlock()
-	lc.posts[postID] = 1
+	lc.favorites[favorite.UserId] = favorite.PostID
 }
 
-func (lc *favoriteLocalCache) Exists(postID string) bool {
-	_, ok := lc.posts[postID]
-	return ok
-}
-
-func (lc *favoriteLocalCache) Increment(postID string) {
+func (lc *favoriteLocalCache) Delete(favorite models.Favorite) {
 	lc.Lock()
 	defer lc.Unlock()
-	lc.posts[postID] += 1
+	delete(lc.favorites, favorite.UserId)
 }
 
-func (lc *favoriteLocalCache) Decrement(postID string) {
-	lc.Lock()
-	defer lc.Unlock()
-	lc.posts[postID] -= 1
+func (lc *favoriteLocalCache) Exists(favorite models.Favorite) bool {
+	_, exists := lc.favorites[favorite.UserId]
+	return exists
 }
 
 func (lc *favoriteLocalCache) Count(postID string) int32 {
-	return lc.posts[postID]
+	count := len(lc.favorites)
+	return int32(count)
 }
