@@ -20,17 +20,17 @@ func NewFavoriteLocalCache() *favoriteLocalCache {
 func (lc *favoriteLocalCache) Add(favorite models.Favorite) {
 	lc.Lock()
 	defer lc.Unlock()
-	lc.favorites[favorite.UserId] = favorite.PostID
+	lc.favorites[favorite.PostID] = favorite.UserId
 }
 
 func (lc *favoriteLocalCache) Delete(favorite models.Favorite) {
 	lc.Lock()
 	defer lc.Unlock()
-	delete(lc.favorites, favorite.UserId)
+	delete(lc.favorites, favorite.PostID)
 }
 
 func (lc *favoriteLocalCache) Exists(favorite models.Favorite) bool {
-	_, exists := lc.favorites[favorite.UserId]
+	_, exists := lc.favorites[favorite.PostID]
 	return exists
 }
 
