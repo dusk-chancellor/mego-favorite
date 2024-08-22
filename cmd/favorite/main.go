@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"github.com/dusk-chancellor/mego-favorite/internal/database"
 	"github.com/dusk-chancellor/mego-favorite/internal/repositories"
 	"github.com/dusk-chancellor/mego-favorite/internal/services"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
 
@@ -24,9 +27,20 @@ func main() {
 	}
 	defer db.Close()
 
-	favoriteRepo := repositories.NewFavoriteRepository(db)
-	favoriteLocalCache := services.NewFavoriteLocalCache()
-	favoriteService := services.NewFavoriteService(favoriteRepo, favoriteLocalCache)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+		Password: "",
+		DB:       0,
+	})
+
+	err = rdb.Ping(context.Background()).Err()
+	if err != nil {
+		log.Fatal("redis connection error")
+	}
+	log.Println("Connected to Redis")
+
+	favoriteRepo := repositories.NewFavoriteRepository(db, rdb)
+	favoriteService := services.NewFavoriteService(favoriteRepo)
 
 	l, err := net.Listen("tcp", ":"+cfg.GRPCPort)
 	if err != nil {

@@ -50,3 +50,8 @@ func (s *serverAPI) Count(ctx context.Context, req *pb.CountRequest) (*pb.CountR
 	count := s.service.Count(postID)
 	return &pb.CountResponse{Count: count}, nil
 }
+/*
+func (s *serverAPI) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindResponse, error) {
+
+}
+*/

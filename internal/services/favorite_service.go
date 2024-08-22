@@ -20,27 +20,27 @@ type FavoriteService interface {
 
 type favoriteService struct {
 	favoriteRepository repositories.FavoriteRepository
-	favoriteLocalCache *favoriteLocalCache
 }
 
-func NewFavoriteService(favoriteRepo repositories.FavoriteRepository, favoriteLocalCache *favoriteLocalCache) FavoriteService {
+func NewFavoriteService(favoriteRepo repositories.FavoriteRepository) FavoriteService {
 	return &favoriteService{
 		favoriteRepository: favoriteRepo,
-		favoriteLocalCache: favoriteLocalCache,
 	}
 }
 
 func (s *favoriteService) Exists(favorite models.Favorite) bool {
-	return s.favoriteLocalCache.Exists(favorite)
+	return s.favoriteRepository.Exists(favorite)
 }
 
 func (s *favoriteService) Add(favorite models.Favorite) (string, string, error) {
+	if s.Exists(favorite) {
+		return "", "", nil
+	}
 	userId, postId, err := s.favoriteRepository.Add(favorite)
 	if err != nil {
 		log.Printf("Element: %s | Failed to add favorite: %v", element, err)
 		return "", "", err
 	}
-	go s.favoriteLocalCache.Add(favorite)
 	return userId, postId, nil
 }
 
@@ -50,11 +50,10 @@ func (s *favoriteService) Delete(favorite models.Favorite) (string, string, erro
 		log.Printf("Element: %s | Failed to delete favorite: %v", element, err)
 		return "", "", err
 	}
-	go s.favoriteLocalCache.Delete(favorite)
 	return userId, postId, nil
 }
 
 func (s *favoriteService) Count(postID string) int32 {
-	return s.favoriteLocalCache.Count(postID)
+	return s.favoriteRepository.Count(postID)
 }
 

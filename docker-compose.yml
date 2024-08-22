@@ -13,6 +13,15 @@ services:
       - "${DB_PORT}:${DB_PORT}"
     networks:
       - mego_network
+  redis:
+    container_name: mego_favorite_redis
+    image: redis:6.2.6-alpine
+    ports:
+      - "${REDIS_OUTER_PORT}:${REDIS_PORT}"
+    volumes:
+      - ./tmp/redis:/data
+    networks:
+      - mego_network
   mego_favorite:
     build:
       context: .
