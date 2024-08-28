@@ -3,10 +3,11 @@ module github.com/dusk-chancellor/mego-favorite
 go 1.22.5
 
 require (
-	github.com/antibomberman/mego-protos v0.0.77
+	github.com/antibomberman/mego-protos v0.0.87
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
+	github.com/redis/go-redis/v9 v9.6.1
 	google.golang.org/grpc v1.65.0
 )
 
@@ -15,7 +16,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/redis/go-redis/v9 v9.6.1 // indirect
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
